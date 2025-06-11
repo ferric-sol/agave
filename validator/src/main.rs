@@ -5,6 +5,7 @@ use {
     agave_validator::{
         cli::{app, warn_for_deprecated_arguments, DefaultArgs},
         commands,
+        config::{MergedConfig, ValidatorConfig},
     },
     log::error,
     solana_streamer::socket::SocketAddrSpace,
@@ -22,8 +23,32 @@ pub fn main() {
     let matches = cli_app.get_matches();
     warn_for_deprecated_arguments(&matches);
 
+    // Handle generate-config subcommand first
+    if let ("generate-config", Some(config_matches)) = matches.subcommand() {
+        let output_path = config_matches.value_of("output").unwrap();
+        match ValidatorConfig::create_default_config(output_path) {
+            Ok(()) => {
+                println!("Generated default configuration file at: {}", output_path);
+                return;
+            }
+            Err(err) => {
+                eprintln!("Failed to generate configuration file: {}", err);
+                exit(1);
+            }
+        }
+    }
+
+    // Load configuration (TOML + CLI + defaults)
+    let config = match MergedConfig::new(&matches, &default_args) {
+        Ok(config) => config,
+        Err(err) => {
+            eprintln!("Configuration error: {}", err);
+            exit(1);
+        }
+    };
+
     let socket_addr_space = SocketAddrSpace::new(matches.is_present("allow_private_addr"));
-    let ledger_path = PathBuf::from(matches.value_of("ledger_path").unwrap());
+    let ledger_path = config.get_ledger_path();
 
     match matches.subcommand() {
         ("init", _) => commands::run::execute(

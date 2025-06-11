@@ -1,0 +1,79 @@
+# Solana Validator Configuration File Example
+# CLI arguments take precedence over these settings
+# All fields are optional - remove or comment out fields to use CLI defaults
+
+# Network Configuration
+bind_address = "127.0.0.1"
+entrypoint = [
+    "entrypoint.mainnet-beta.solana.com:8001",
+    "entrypoint2.mainnet-beta.solana.com:8001"
+]
+gossip_port = 8001
+gossip_host = "127.0.0.1"
+dynamic_port_range = "8002-10000"
+allow_private_addr = false
+
+# Ledger Configuration
+ledger_path = "./ledger"
+accounts_path = ["./accounts"]
+account_snapshot_paths = ["./snapshots"]
+limit_ledger_size = 50000000
+
+# RPC Configuration  
+rpc_port = 8899
+rpc_bind_address = "127.0.0.1"
+enable_rpc_transaction_history = false
+enable_extended_tx_metadata_storage = false
+rpc_threads = 4
+rpc_blocking_threads = 1
+rpc_max_request_body_size = 52428800
+rpc_pubsub_max_active_subscriptions = 5000
+rpc_pubsub_queue_capacity_items = 100000
+rpc_pubsub_queue_capacity_bytes = 100000000
+
+# Performance Configuration
+accounts_shrink_ratio = 0.8
+accounts_shrink_optimize_total_space = true
+banking_trace_dir_byte_limit = 1000000000
+tpu_connection_pool_size = 4
+tpu_max_connections_per_peer = 8
+tpu_max_connections_per_ipaddr_per_minute = 10
+tpu_max_staked_connections = 2000
+tpu_max_unstaked_connections = 2000
+tpu_max_streams_per_ms = 1000
+
+# Snapshot Configuration
+snapshot_version = "V1_7_0"
+snapshot_archive_format = "zstd"
+full_snapshot_archive_interval_slots = 25000
+incremental_snapshot_archive_interval_slots = 100
+maximum_full_snapshot_archives_to_retain = 2
+maximum_incremental_snapshot_archives_to_retain = 4
+min_snapshot_download_speed = 10485760
+max_snapshot_download_abort = 5
+
+# Thread Configuration
+replay_forks_threads = 1
+replay_transactions_threads = 1
+tvu_shred_sigverify_threads = 1
+
+# Validator Behavior
+voting_disabled = false
+dev_halt_at_slot = 0
+wait_for_supermajority = 0
+# expected_genesis_hash = ""
+# expected_bank_hash = ""
+expected_shred_version = 0
+no_voting = false
+
+# Identity and Security
+identity = "./validator-keypair.json"
+vote_account = "./vote-account-keypair.json"
+authorized_voter_keypairs = ["./authorized-voter-keypair.json"]
+known_validators = []
+only_known_rpc = false
+
+# Development and Debugging
+log_messages_bytes_limit = 10000
+skip_startup_ledger_verification = false
+debug_keys = [] 

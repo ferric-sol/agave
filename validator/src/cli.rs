@@ -64,6 +64,14 @@ pub fn app<'a>(version: &'a str, default_args: &'a DefaultArgs) -> App<'a, 'a> {
         .global_setting(AppSettings::InferSubcommands)
         .global_setting(AppSettings::UnifiedHelpMessage)
         .global_setting(AppSettings::VersionlessSubcommands)
+        .arg(
+            Arg::with_name("config_file")
+                .short("C")
+                .long("config")
+                .value_name("PATH")
+                .takes_value(true)
+                .help("Configuration file to use (TOML format)")
+        )
         .subcommand(commands::exit::command())
         .subcommand(commands::authorized_voter::command())
         .subcommand(commands::contact_info::command())
@@ -71,6 +79,19 @@ pub fn app<'a>(version: &'a str, default_args: &'a DefaultArgs) -> App<'a, 'a> {
         .subcommand(commands::repair_whitelist::command())
         .subcommand(
             SubCommand::with_name("init").about("Initialize the ledger directory then exit"),
+        )
+        .subcommand(
+            SubCommand::with_name("generate-config")
+                .about("Generate a sample configuration file")
+                .arg(
+                    Arg::with_name("output")
+                        .short("o")
+                        .long("output")
+                        .value_name("FILE")
+                        .takes_value(true)
+                        .default_value("config.toml")
+                        .help("Output file path for the configuration")
+                )
         )
         .subcommand(commands::monitor::command())
         .subcommand(SubCommand::with_name("run").about("Run the validator"))
