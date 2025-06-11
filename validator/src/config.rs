@@ -2,8 +2,7 @@ use {
     crate::cli::DefaultArgs,
     clap::ArgMatches,
     serde::{Deserialize, Serialize},
-    std::{collections::HashMap, path::PathBuf},
-    solana_runtime::snapshot_utils::SnapshotVersion,
+    std::path::PathBuf,
 };
 
 /// TOML-based configuration for the Solana validator

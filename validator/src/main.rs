@@ -9,7 +9,7 @@ use {
     },
     log::error,
     solana_streamer::socket::SocketAddrSpace,
-    std::{path::PathBuf, process::exit},
+    std::process::exit,
 };
 
 #[cfg(not(any(target_env = "msvc", target_os = "freebsd")))]

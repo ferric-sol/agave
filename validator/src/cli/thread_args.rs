@@ -9,6 +9,7 @@ use {
 };
 
 // Need this struct to provide &str whose lifetime matches that of the CLAP Arg's
+#[derive(Clone)]
 pub struct DefaultThreadArgs {
     pub accounts_db_clean_threads: String,
     pub accounts_db_foreground_threads: String,

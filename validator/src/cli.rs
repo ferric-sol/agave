@@ -387,6 +387,7 @@ pub fn warn_for_deprecated_arguments(matches: &ArgMatches) {
     }
 }
 
+#[derive(Clone)]
 pub struct DefaultArgs {
     pub bind_address: String,
     pub dynamic_port_range: String,
