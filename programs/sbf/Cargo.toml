@@ -123,7 +123,6 @@ solana-clock = { version = "=2.2.2", features = ["serde", "sysvar"] }
 solana-compute-budget = { path = "../../compute-budget", version = "=3.0.0" }
 solana-compute-budget-instruction = { path = "../../compute-budget-instruction", version = "=3.0.0" }
 solana-curve25519 = { path = "../../curves/curve25519", version = "=3.0.0" }
-solana-decode-error = "=2.2.1"
 solana-define-syscall = "=2.3.0"
 solana-fee = { path = "../../fee", version = "=3.0.0" }
 solana-hash = { version = "=2.3.0", features = ["bytemuck", "serde", "std"] }
@@ -137,7 +136,7 @@ solana-measure = { path = "../../measure", version = "=3.0.0" }
 solana-msg = "=2.2.1"
 solana-poseidon = { path = "../../poseidon/", version = "=3.0.0" }
 solana-program = "=2.2.1"
-solana-program-entrypoint = "=2.2.1"
+solana-program-entrypoint = "=2.3.0"
 solana-program-error = "=2.2.2"
 solana-program-memory = "=2.2.1"
 solana-program-runtime = { path = "../../program-runtime", version = "=3.0.0" }
@@ -220,7 +219,7 @@ solana-logger = { workspace = true }
 solana-measure = { workspace = true }
 solana-message = "2.3.0"
 solana-program = { workspace = true }
-solana-program-entrypoint = "2.2.1"
+solana-program-entrypoint = "2.3.0"
 solana-program-runtime = { workspace = true }
 solana-pubkey = "2.4.0"
 solana-rent = "2.2.1"

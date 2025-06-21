@@ -15,6 +15,21 @@ Release channels have their own copy of this changelog:
 <a name="edge-channel"></a>
 ## 3.0.0 - Unreleased
 
+### Validator
+
+#### Breaking
+* Remove deprecated arguments
+  * `--accounts-index-memory-limit-mb`
+  * `--accountsdb-repl-bind-address`, `--accountsdb-repl-port`, `--accountsdb-repl-threads`, `--enable-accountsdb-repl`
+  * `--disable-quic-servers`, `--enable-quic-servers`
+  * `--etcd-cacert-file`, `--etcd-cert-file`, `--etcd-domain-name`, `--etcd-endpoint`, `--etcd-key-file`, `--tower-storage`
+  * `--no-check-vote-account`
+  * `--no-rocksdb-compaction`, `--rocksdb-compaction-interval-slots`, `--rocksdb-max-compaction-jitter-slots`
+  * `--replay-slots-concurrently`
+  * `--rpc-pubsub-max-connections`, `--rpc-pubsub-max-fragment-size`, `--rpc-pubsub-max-in-buffer-capacity`, `--rpc-pubsub-max-out-buffer-capacity`, `--enable-cpi-and-log-storage`, `--minimal-rpc-api`
+  * `--skip-poh-verify`
+* Deprecated snapshot archive formats have been removed and are no longer loadable.
+* Using `--snapshot-interval-slots 0` to disable generating snapshots has been removed. Use `--no-snapshots` instead.
 
 ## 2.3.0
 
@@ -52,6 +67,11 @@ Release channels have their own copy of this changelog:
 #### Changes
 * `withdraw-stake` now accepts the `AVAILABLE` keyword for the amount, allowing withdrawal of unstaked lamports (#4483)
 * `solana-test-validator` will now bind to localhost (127.0.0.1) by default rather than all interfaces to improve security. Provide `--bind-address 0.0.0.0` to bind to all interfaces to restore the previous default behavior.
+
+### RPC
+
+#### Changes
+* `simulateTransaction` now includes `loadedAccountsDataSize` in its result. `loadedAccountsDataSize` is the total number of bytes loaded for all accounts in the simulated transaction.
 
 ## 2.2.0
 

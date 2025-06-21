@@ -3,11 +3,11 @@ use std::ffi::{CStr, CString};
 use {
     crate::{
         bank::{Bank, BankFieldsToDeserialize, BankFieldsToSerialize, BankHashStats, BankRc},
-        epoch_stakes::{EpochStakes, VersionedEpochStakes},
+        epoch_stakes::VersionedEpochStakes,
         runtime_config::RuntimeConfig,
-        serde_snapshot::storage::SerializableAccountStorageEntry,
         snapshot_utils::{SnapshotError, StorageAndNextAccountsFileId},
-        stakes::{serde_stakes_to_delegation_format, Stakes, StakesEnum},
+        stake_account::StakeAccount,
+        stakes::{serialize_stake_accounts_to_delegation_format, Stakes},
     },
     bincode::{self, config::Options, Error},
     log::*,
@@ -63,7 +63,7 @@ pub(crate) use {
     solana_accounts_db::accounts_hash::{
         SerdeAccountsDeltaHash, SerdeAccountsHash, SerdeIncrementalAccountsHash,
     },
-    storage::SerializedAccountsFileId,
+    storage::{SerializableAccountStorageEntry, SerializedAccountsFileId},
 };
 
 const MAX_STREAM_SIZE: u64 = 32 * 1024 * 1024 * 1024;
@@ -151,14 +151,14 @@ struct DeserializableVersionedBank {
     collector_fees: u64,
     _fee_calculator: FeeCalculator,
     fee_rate_governor: FeeRateGovernor,
-    collected_rent: u64,
+    _collected_rent: u64,
     rent_collector: RentCollector,
     epoch_schedule: EpochSchedule,
     inflation: Inflation,
     stakes: Stakes<Delegation>,
     #[allow(dead_code)]
     unused_accounts: UnusedAccounts,
-    epoch_stakes: HashMap<Epoch, EpochStakes>,
+    unused_epoch_stakes: HashMap<Epoch, ()>,
     is_delta: bool,
 }
 
@@ -188,17 +188,16 @@ impl From<DeserializableVersionedBank> for BankFieldsToDeserialize {
             collector_id: dvb.collector_id,
             collector_fees: dvb.collector_fees,
             fee_rate_governor: dvb.fee_rate_governor,
-            collected_rent: dvb.collected_rent,
             rent_collector: dvb.rent_collector,
             epoch_schedule: dvb.epoch_schedule,
             inflation: dvb.inflation,
             stakes: dvb.stakes,
-            epoch_stakes: dvb.epoch_stakes,
             is_delta: dvb.is_delta,
             incremental_snapshot_persistence: None,
             epoch_accounts_hash: None,
-            accounts_lt_hash: None, // populated from ExtraFieldsToDeserialize
-            bank_hash_stats: BankHashStats::default(), // populated from AccountsDbFields
+            versioned_epoch_stakes: HashMap::default(), // populated from ExtraFieldsToDeserialize
+            accounts_lt_hash: None,                     // populated from ExtraFieldsToDeserialize
+            bank_hash_stats: BankHashStats::default(),  // populated from AccountsDbFields
         }
     }
 }
@@ -235,10 +234,10 @@ struct SerializableVersionedBank {
     rent_collector: RentCollector,
     epoch_schedule: EpochSchedule,
     inflation: Inflation,
-    #[serde(serialize_with = "serde_stakes_to_delegation_format::serialize")]
-    stakes: StakesEnum,
+    #[serde(serialize_with = "serialize_stake_accounts_to_delegation_format")]
+    stakes: Stakes<StakeAccount<Delegation>>,
     unused_accounts: UnusedAccounts,
-    epoch_stakes: HashMap<Epoch, EpochStakes>,
+    unused_epoch_stakes: HashMap<Epoch, ()>,
     is_delta: bool,
 }
 
@@ -269,13 +268,13 @@ impl From<BankFieldsToSerialize> for SerializableVersionedBank {
             collector_fees: rhs.collector_fees,
             fee_calculator: FeeCalculator::default(),
             fee_rate_governor: rhs.fee_rate_governor,
-            collected_rent: rhs.collected_rent,
+            collected_rent: u64::default(),
             rent_collector: rhs.rent_collector,
             epoch_schedule: rhs.epoch_schedule,
             inflation: rhs.inflation,
             stakes: rhs.stakes,
             unused_accounts: UnusedAccounts::default(),
-            epoch_stakes: rhs.epoch_stakes,
+            unused_epoch_stakes: HashMap::default(),
             is_delta: rhs.is_delta,
         }
     }
@@ -300,6 +299,13 @@ pub struct SnapshotBankFields {
 }
 
 impl SnapshotBankFields {
+    pub fn new(
+        full: BankFieldsToDeserialize,
+        incremental: Option<BankFieldsToDeserialize>,
+    ) -> Self {
+        Self { full, incremental }
+    }
+
     /// Collapse the SnapshotBankFields into a single (the latest) BankFieldsToDeserialize.
     pub fn collapse_into(self) -> BankFieldsToDeserialize {
         self.incremental.unwrap_or(self.full)
@@ -315,11 +321,21 @@ pub struct SnapshotAccountsDbFields<T> {
 }
 
 impl<T> SnapshotAccountsDbFields<T> {
+    pub fn new(
+        full_snapshot_accounts_db_fields: AccountsDbFields<T>,
+        incremental_snapshot_accounts_db_fields: Option<AccountsDbFields<T>>,
+    ) -> Self {
+        Self {
+            full_snapshot_accounts_db_fields,
+            incremental_snapshot_accounts_db_fields,
+        }
+    }
+
     /// Collapse the SnapshotAccountsDbFields into a single AccountsDbFields.  If there is no
     /// incremental snapshot, this returns the AccountsDbFields from the full snapshot.
     /// Otherwise, use the AccountsDbFields from the incremental snapshot, and a combination
     /// of the storages from both the full and incremental snapshots.
-    fn collapse_into(self) -> Result<AccountsDbFields<T>, Error> {
+    pub fn collapse_into(self) -> Result<AccountsDbFields<T>, Error> {
         match self.incremental_snapshot_accounts_db_fields {
             None => Ok(self.full_snapshot_accounts_db_fields),
             Some(AccountsDbFields(
@@ -431,8 +447,15 @@ fn deserialize_bank_fields<R>(
 where
     R: Read,
 {
-    let mut bank_fields: BankFieldsToDeserialize =
-        deserialize_from::<_, DeserializableVersionedBank>(&mut stream)?.into();
+    let deserializable_bank = deserialize_from::<_, DeserializableVersionedBank>(&mut stream)?;
+    if !deserializable_bank.unused_epoch_stakes.is_empty() {
+        return Err(Box::new(bincode::ErrorKind::Custom(
+            "Expected deserialized bank's unused_epoch_stakes field \
+             to be empty"
+                .to_string(),
+        )));
+    }
+    let mut bank_fields = BankFieldsToDeserialize::from(deserializable_bank);
     let accounts_db_fields = deserialize_accounts_db_fields(stream)?;
     let extra_fields = deserialize_from(stream)?;
 
@@ -450,15 +473,7 @@ where
         .clone_with_lamports_per_signature(lamports_per_signature);
     bank_fields.incremental_snapshot_persistence = incremental_snapshot_persistence;
     bank_fields.epoch_accounts_hash = epoch_accounts_hash;
-
-    // If we deserialize the new epoch stakes, add all of the entries into the
-    // other deserialized map which could still have old epoch stakes entries
-    bank_fields.epoch_stakes.extend(
-        versioned_epoch_stakes
-            .into_iter()
-            .map(|(epoch, versioned_epoch_stakes)| (epoch, versioned_epoch_stakes.into())),
-    );
-
+    bank_fields.versioned_epoch_stakes = versioned_epoch_stakes;
     bank_fields.accounts_lt_hash = accounts_lt_hash.map(Into::into);
 
     Ok((bank_fields, accounts_db_fields))
@@ -513,6 +528,7 @@ pub(crate) fn fields_from_stream<R: Read>(
     deserialize_bank_fields(snapshot_stream)
 }
 
+#[cfg(feature = "dev-context-only-utils")]
 pub(crate) fn fields_from_streams(
     snapshot_streams: &mut SnapshotStreams<impl Read>,
 ) -> std::result::Result<
@@ -550,6 +566,7 @@ pub struct BankFromStreamsInfo {
 }
 
 #[allow(clippy::too_many_arguments)]
+#[cfg(test)]
 pub(crate) fn bank_from_streams<R>(
     snapshot_streams: &mut SnapshotStreams<R>,
     account_paths: &[PathBuf],
@@ -836,12 +853,12 @@ impl solana_frozen_abi::abi_example::TransparentAsHelper for SerializableAccount
 
 /// This struct contains side-info while reconstructing the bank from fields
 #[derive(Debug)]
-struct ReconstructedBankInfo {
-    duplicates_lt_hash: Option<Box<DuplicatesLtHash>>,
+pub(crate) struct ReconstructedBankInfo {
+    pub(crate) duplicates_lt_hash: Option<Box<DuplicatesLtHash>>,
 }
 
 #[allow(clippy::too_many_arguments)]
-fn reconstruct_bank_from_fields<E>(
+pub(crate) fn reconstruct_bank_from_fields<E>(
     bank_fields: SnapshotBankFields,
     snapshot_accounts_db_fields: SnapshotAccountsDbFields<E>,
     genesis_config: &GenesisConfig,
@@ -916,13 +933,12 @@ pub(crate) fn reconstruct_single_storage(
     append_vec_id: AccountsFileId,
     storage_access: StorageAccess,
 ) -> Result<Arc<AccountStorageEntry>, SnapshotError> {
-    let (accounts_file, num_accounts) =
-        AccountsFile::new_from_file(append_vec_path, current_len, storage_access)?;
+    let accounts_file =
+        AccountsFile::new_for_startup(append_vec_path, current_len, storage_access)?;
     Ok(Arc::new(AccountStorageEntry::new_existing(
         *slot,
         append_vec_id,
         accounts_file,
-        num_accounts,
     )))
 }
 

@@ -88,6 +88,20 @@ impl AccountsFile {
         Ok((Self::AppendVec(av), num_accounts))
     }
 
+    /// Creates a new AccountsFile for the underlying storage at `path`
+    ///
+    /// This version of `new()` may only be called when reconstructing storages as part of startup.
+    /// It trusts the snapshot's value for `current_len`, and relies on later index generation or
+    /// accounts verification to ensure it is valid.
+    pub fn new_for_startup(
+        path: impl Into<PathBuf>,
+        current_len: usize,
+        storage_access: StorageAccess,
+    ) -> Result<Self> {
+        let av = AppendVec::new_for_startup(path, current_len, storage_access)?;
+        Ok(Self::AppendVec(av))
+    }
+
     /// true if this storage can possibly be appended to (independent of capacity check)
     //
     // NOTE: Only used by ancient append vecs "append" method, which is test-only now.
@@ -243,22 +257,6 @@ impl AccountsFile {
                 // IndexOffset that is equivalent to AccountInfo::reduced_offset.
                 let index_offset = IndexOffset(AccountInfo::get_reduced_offset(offset));
                 ts.reader()?.get_account_shared_data(index_offset).ok()?
-            }
-        }
-    }
-
-    /// returns an `IndexInfo` for an account at `offset`, if any.  Otherwise, return None.
-    ///
-    /// Only intended to be used with the accounts index.
-    pub(crate) fn get_account_index_info(&self, offset: usize) -> Option<IndexInfo> {
-        match self {
-            Self::AppendVec(av) => av.get_account_index_info(offset),
-            Self::TieredStorage(ts) => {
-                // Note: The conversion here is needed as the AccountsDB currently
-                // assumes all offsets are multiple of 8 while TieredStorage uses
-                // IndexOffset that is equivalent to AccountInfo::reduced_offset.
-                let index_offset = IndexOffset(AccountInfo::get_reduced_offset(offset));
-                ts.reader()?.get_account_index_info(index_offset).ok()?
             }
         }
     }

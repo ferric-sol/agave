@@ -34,9 +34,10 @@ pub struct SVMFeatureSet {
     pub fix_alt_bn128_multiplication_input_length: bool,
     pub loosen_cpi_size_restriction: bool,
     pub increase_tx_account_lock_limit: bool,
-    pub disable_rent_fees_collection: bool,
     pub enable_extend_program_checked: bool,
     pub formalize_loaded_transaction_data_size: bool,
+    pub disable_zk_elgamal_proof_program: bool,
+    pub reenable_zk_elgamal_proof_program: bool,
 }
 
 impl SVMFeatureSet {
@@ -76,9 +77,10 @@ impl SVMFeatureSet {
             fix_alt_bn128_multiplication_input_length: true,
             loosen_cpi_size_restriction: true,
             increase_tx_account_lock_limit: true,
-            disable_rent_fees_collection: true,
             enable_extend_program_checked: true,
             formalize_loaded_transaction_data_size: true,
+            disable_zk_elgamal_proof_program: true,
+            reenable_zk_elgamal_proof_program: true,
         }
     }
 }

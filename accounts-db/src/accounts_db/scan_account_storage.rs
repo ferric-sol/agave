@@ -1064,9 +1064,12 @@ mod tests {
 
             for account in accounts {
                 let offset = account.0;
-                let stored_account = storage.accounts.get_account_index_info(offset);
-                self.pubkeys_to_skip
-                    .insert(stored_account.unwrap().index_info.pubkey);
+                storage.accounts.get_stored_account_without_data_callback(
+                    offset,
+                    |stored_account| {
+                        self.pubkeys_to_skip.insert(*stored_account.pubkey());
+                    },
+                );
             }
         }
         fn filter(&mut self, pubkey: &Pubkey) -> bool {
@@ -1116,7 +1119,7 @@ mod tests {
 
         // Mark each account obsolete at a different slot
         for (i, offsets) in offsets.unwrap().offsets.iter().enumerate() {
-            storage.mark_account_obsolete(*offsets, 0, i as Slot);
+            storage.mark_accounts_obsolete(vec![(*offsets, 0)].into_iter(), i as Slot);
         }
 
         // Perform scans of the storage assuming a different slot and verify the number of accounts found matches

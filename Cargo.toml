@@ -46,6 +46,7 @@ members = [
     "geyser-plugin-manager",
     "gossip",
     "install",
+    "io-uring",
     "keygen",
     "lattice-hash",
     "ledger",
@@ -134,7 +135,6 @@ members = [
     "validator",
     "version",
     "vortexor",
-    "vortexor-receiver",
     "vote",
     "watchtower",
     "wen-restart",
@@ -180,6 +180,7 @@ agave-banking-stage-ingress-types = { path = "banking-stage-ingress-types", vers
 agave-cargo-registry = { path = "cargo-registry", version = "=3.0.0" }
 agave-feature-set = { path = "feature-set", version = "=3.0.0" }
 agave-geyser-plugin-interface = { path = "geyser-plugin-interface", version = "=3.0.0" }
+agave-io-uring = { path = "io-uring", version = "=3.0.0" }
 agave-precompiles = { path = "precompiles", version = "=3.0.0" }
 agave-reserved-account-keys = { path = "reserved-account-keys", version = "=3.0.0" }
 agave-thread-manager = { path = "thread-manager", version = "=3.0.0" }
@@ -214,13 +215,13 @@ borsh0-10 = { package = "borsh", version = "0.10.3" }
 bs58 = { version = "0.5.1", default-features = false }
 bv = "0.11.1"
 byte-unit = "4.0.19"
-bytemuck = "1.23.0"
+bytemuck = "1.23.1"
 bytemuck_derive = "1.9.3"
 bytes = "1.10"
 bzip2 = "0.4.4"
 caps = "0.5.5"
 cargo_metadata = "0.15.4"
-cfg-if = "1.0.0"
+cfg-if = "1.0.1"
 cfg_eval = "0.1.2"
 chrono = { version = "0.4.41", default-features = false }
 chrono-humanize = "0.2.3"
@@ -240,7 +241,7 @@ ctrlc = "3.4.7"
 curve25519-dalek = { version = "4.1.3", features = ["digest", "rand_core"] }
 dashmap = "5.5.3"
 derivation-path = { version = "0.2.0", default-features = false }
-derive-where = "1.4.0"
+derive-where = "1.5.0"
 derive_more = { version = "1.0.0", features = ["full"] }
 dialoguer = "0.10.4"
 digest = "0.10.7"
@@ -278,6 +279,7 @@ hyper-proxy = "0.9.1"
 im = "15.1.0"
 indexmap = "2.9.0"
 indicatif = "0.17.11"
+io-uring = "0.7.8"
 itertools = "0.12.1"
 jemallocator = { package = "tikv-jemallocator", version = "0.6.0", features = [
     "unprefixed_malloc_on_supported_platforms",
@@ -291,7 +293,7 @@ jsonrpc-http-server = "18.0.0"
 jsonrpc-ipc-server = "18.0.0"
 jsonrpc-pubsub = "18.0.0"
 lazy-lru = "0.1.3"
-libc = "0.2.172"
+libc = "0.2.174"
 libloading = "0.7.4"
 libsecp256k1 = { version = "0.6.0", default-features = false, features = [
     "std",
@@ -323,7 +325,7 @@ predicates = "2.1"
 pretty-hex = "0.3.0"
 prio-graph = "0.3.0"
 proc-macro2 = "1.0.95"
-proptest = "1.6"
+proptest = "1.7"
 prost = "0.11.9"
 prost-build = "0.11.9"
 prost-types = "0.11.9"
@@ -340,11 +342,11 @@ rand_chacha0-2 = { package = "rand_chacha", version = "0.2.2" }
 rayon = "1.10.0"
 reed-solomon-erasure = "6.0.0"
 regex = "1.11.1"
-reqwest = { version = "0.12.19", default-features = false }
+reqwest = { version = "0.12.20", default-features = false }
 reqwest-middleware = "0.4.2"
 rolling-file = "0.2.0"
 rpassword = "7.4"
-rustls = { version = "0.23.27", features = ["std"], default-features = false }
+rustls = { version = "0.23.28", features = ["std"], default-features = false }
 scopeguard = "1.2.0"
 semver = "1.0.26"
 seqlock = "0.2.0"
@@ -353,7 +355,7 @@ serde-big-array = "0.5.1"
 serde_bytes = "0.11.17"
 serde_derive = "1.0.219" # must match the serde version, see https://github.com/serde-rs/serde/issues/2584#issuecomment-1685252251
 serde_json = "1.0.140"
-serde_with = { version = "3.12.0", default-features = false }
+serde_with = { version = "3.13.0", default-features = false }
 serde_yaml = "0.9.34"
 serial_test = "2.0.0"
 sha2 = "0.10.9"
@@ -361,7 +363,7 @@ sha3 = "0.10.8"
 shuttle = "0.7.1"
 signal-hook = "0.3.18"
 siphasher = "1.0.1"
-slab = "0.4.9"
+slab = "0.4.10"
 smallvec = "1.15.1"
 smpl_jwt = "0.7.1"
 socket2 = "0.5.10"
@@ -408,7 +410,6 @@ solana-core = { path = "core", version = "=3.0.0" }
 solana-cost-model = { path = "cost-model", version = "=3.0.0" }
 solana-cpi = "2.2.1"
 solana-curve25519 = { path = "curves/curve25519", version = "=3.0.0" }
-solana-decode-error = "2.2.1"
 solana-define-syscall = "2.3.0"
 solana-derivation-path = "2.2.1"
 solana-download-utils = { path = "download-utils", version = "=3.0.0" }
@@ -425,11 +426,11 @@ solana-feature-gate-interface = "2.2.2"
 solana-fee = { path = "fee", version = "=3.0.0" }
 solana-fee-calculator = "2.2.1"
 solana-fee-structure = "2.3.0"
-solana-file-download = "2.2.1"
+solana-file-download = "2.2.2"
 solana-frozen-abi = "2.3.0"
 solana-frozen-abi-macro = "2.2.1"
 solana-genesis = { path = "genesis", version = "=3.0.0" }
-solana-genesis-config = "2.2.1"
+solana-genesis-config = "2.3.0"
 solana-genesis-utils = { path = "genesis-utils", version = "=3.0.0" }
 solana-geyser-plugin-manager = { path = "geyser-plugin-manager", version = "=3.0.0" }
 solana-gossip = { path = "gossip", version = "=3.0.0" }
@@ -469,8 +470,8 @@ solana-poh-config = "2.2.1"
 solana-poseidon = { path = "poseidon", version = "=3.0.0" }
 solana-precompile-error = "2.2.2"
 solana-presigner = "2.2.1"
-solana-program = { version = "2.2.1", default-features = false }
-solana-program-entrypoint = "2.2.1"
+solana-program = { version = "2.3.0", default-features = false }
+solana-program-entrypoint = "2.3.0"
 solana-program-error = "2.2.2"
 solana-program-memory = "2.3.1"
 solana-program-option = "2.2.1"
@@ -485,7 +486,6 @@ solana-rayon-threadlimit = { path = "rayon-threadlimit", version = "=3.0.0" }
 solana-remote-wallet = { path = "remote-wallet", version = "=3.0.0", default-features = false }
 solana-rent = "2.2.1"
 solana-rent-collector = "2.2.1"
-solana-rent-debits = "2.2.1"
 solana-reward-info = "2.2.1"
 solana-rpc = { path = "rpc", version = "=3.0.0" }
 solana-rpc-client = { path = "rpc-client", version = "=3.0.0", default-features = false }
@@ -497,9 +497,9 @@ solana-runtime-transaction = { path = "runtime-transaction", version = "=3.0.0" 
 solana-sanitize = "2.2.1"
 solana-sbpf = "=0.11.1"
 solana-sdk-ids = "2.2.1"
-solana-secp256k1-program = "2.2.1"
+solana-secp256k1-program = "2.2.3"
 solana-secp256k1-recover = "2.2.1"
-solana-secp256r1-program = "2.2.3"
+solana-secp256r1-program = "2.2.4"
 solana-seed-derivable = "2.2.1"
 solana-seed-phrase = "2.2.1"
 solana-send-transaction-service = { path = "send-transaction-service", version = "=3.0.0" }
@@ -539,7 +539,7 @@ solana-tps-client = { path = "tps-client", version = "=3.0.0" }
 solana-tpu-client = { path = "tpu-client", version = "=3.0.0", default-features = false }
 solana-tpu-client-next = { path = "tpu-client-next", version = "=3.0.0" }
 solana-transaction = "2.2.3"
-solana-transaction-context = { path = "transaction-context", version = "=3.0.0", features = ["bincode", "debug-signature"] }
+solana-transaction-context = { path = "transaction-context", version = "=3.0.0", features = ["bincode"] }
 solana-transaction-error = "2.2.1"
 solana-transaction-metrics-tracker = { path = "transaction-metrics-tracker", version = "=3.0.0" }
 solana-transaction-status = { path = "transaction-status", version = "=3.0.0" }
@@ -551,7 +551,6 @@ solana-unified-scheduler-logic = { path = "unified-scheduler-logic", version = "
 solana-unified-scheduler-pool = { path = "unified-scheduler-pool", version = "=3.0.0" }
 solana-validator-exit = "2.2.1"
 solana-version = { path = "version", version = "=3.0.0" }
-solana-vortexor-receiver = { path = "vortexor-receiver", version = "=3.0.0" }
 solana-vote = { path = "vote", version = "=3.0.0" }
 solana-vote-interface = "2.2.5"
 solana-vote-program = { path = "programs/vote", version = "=3.0.0", default-features = false }
@@ -623,8 +622,7 @@ lto = "thin"
 
 [profile.release-with-lto]
 inherits = "release"
-split-debuginfo = "unpacked"
-lto = "thin"
+lto = "fat"
 codegen-units = 1
 
 # curve25519-dalek uses the simd backend by default in v4 if possible,

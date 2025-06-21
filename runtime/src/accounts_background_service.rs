@@ -678,7 +678,6 @@ impl AccountsBackgroundService {
                                     Some(max_clean_slot_inclusive),
                                     false,
                                     bank.epoch_schedule(),
-                                    bank.clean_accounts_old_storages_policy(),
                                 );
                                 last_cleaned_slot = max_clean_slot_inclusive;
                                 previous_clean_time = Instant::now();
@@ -857,7 +856,7 @@ mod test {
         super::*,
         crate::{
             bank::epoch_accounts_hash_utils, genesis_utils::create_genesis_config,
-            snapshot_config::SnapshotConfig,
+            snapshot_config::SnapshotConfig, snapshot_utils::SnapshotInterval,
         },
         crossbeam_channel::unbounded,
         solana_account::AccountSharedData,
@@ -865,6 +864,7 @@ mod test {
         solana_epoch_schedule::EpochSchedule,
         solana_hash::Hash,
         solana_pubkey::Pubkey,
+        std::num::NonZeroU64,
     };
 
     #[test]
@@ -911,8 +911,12 @@ mod test {
         const INCREMENTAL_SNAPSHOT_INTERVAL: Slot = 30;
 
         let snapshot_config = SnapshotConfig {
-            full_snapshot_archive_interval_slots: FULL_SNAPSHOT_INTERVAL,
-            incremental_snapshot_archive_interval_slots: INCREMENTAL_SNAPSHOT_INTERVAL,
+            full_snapshot_archive_interval: SnapshotInterval::Slots(
+                NonZeroU64::new(FULL_SNAPSHOT_INTERVAL).unwrap(),
+            ),
+            incremental_snapshot_archive_interval: SnapshotInterval::Slots(
+                NonZeroU64::new(INCREMENTAL_SNAPSHOT_INTERVAL).unwrap(),
+            ),
             ..SnapshotConfig::default()
         };
 
