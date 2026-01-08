@@ -56,6 +56,9 @@ use {
         greedy_scheduler::{GreedyScheduler, GreedySchedulerConfig},
         prio_graph_scheduler::PrioGraphSchedulerConfig,
         receive_and_buffer::TransactionViewReceiveAndBuffer,
+        revenue_maximizing_scheduler::{
+            RevenueMaximizingScheduler, RevenueMaximizingSchedulerConfig,
+        },
     },
     vote_worker::VoteWorker,
 };
@@ -504,14 +507,7 @@ impl BankingStage {
                 block_production_method,
                 num_workers,
                 config,
-            } => self.spawn_internal(
-                matches!(
-                    block_production_method,
-                    BlockProductionMethod::CentralSchedulerGreedy
-                ),
-                num_workers,
-                config,
-            ),
+            } => self.spawn_internal(block_production_method, num_workers, config),
             #[cfg(unix)]
             BankingControlMsg::External { session } => self.spawn_external(session),
         };
@@ -527,7 +523,7 @@ impl BankingStage {
 
     fn spawn_internal(
         &self,
-        use_greedy_scheduler: bool,
+        block_production_method: BlockProductionMethod,
         num_workers: NonZeroUsize,
         scheduler_config: SchedulerConfig,
     ) -> Vec<JoinHandle<()>> {
@@ -617,20 +613,31 @@ impl BankingStage {
         }
 
         // Spawn the central scheduler thread
-        if use_greedy_scheduler {
-            let scheduler = GreedyScheduler::new(
-                work_senders,
-                finished_work_receiver,
-                GreedySchedulerConfig::default(),
-            );
-            spawn_scheduler!(scheduler);
-        } else {
-            let scheduler = PrioGraphScheduler::new(
-                work_senders,
-                finished_work_receiver,
-                PrioGraphSchedulerConfig::default(),
-            );
-            spawn_scheduler!(scheduler);
+        match block_production_method {
+            BlockProductionMethod::CentralSchedulerGreedy => {
+                let scheduler = GreedyScheduler::new(
+                    work_senders,
+                    finished_work_receiver,
+                    GreedySchedulerConfig::default(),
+                );
+                spawn_scheduler!(scheduler);
+            }
+            BlockProductionMethod::CentralScheduler => {
+                let scheduler = PrioGraphScheduler::new(
+                    work_senders,
+                    finished_work_receiver,
+                    PrioGraphSchedulerConfig::default(),
+                );
+                spawn_scheduler!(scheduler);
+            }
+            BlockProductionMethod::CentralSchedulerRevenueMaximizing => {
+                let scheduler = RevenueMaximizingScheduler::new(
+                    work_senders,
+                    finished_work_receiver,
+                    RevenueMaximizingSchedulerConfig::default(),
+                );
+                spawn_scheduler!(scheduler);
+            }
         }
 
         threads

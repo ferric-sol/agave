@@ -13,6 +13,11 @@ pub mod prio_graph_scheduler;
 pub(crate) mod prio_graph_scheduler;
 
 #[cfg(feature = "dev-context-only-utils")]
+pub mod revenue_maximizing_scheduler;
+#[cfg(not(feature = "dev-context-only-utils"))]
+pub(crate) mod revenue_maximizing_scheduler;
+
+#[cfg(feature = "dev-context-only-utils")]
 pub mod receive_and_buffer;
 #[cfg(not(feature = "dev-context-only-utils"))]
 pub(crate) mod receive_and_buffer;
